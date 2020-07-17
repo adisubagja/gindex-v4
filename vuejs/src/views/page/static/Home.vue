@@ -1,5 +1,5 @@
 <template>
-  <section :class="ismobile ? logged ? 'section mx-0 mt-2 px-0' : 'section home-back mt-2 mx-0 px-0' : logged ? 'section' : 'section home-back' ">
+  <section :class="ismobile ? logged ? 'section mx-0 px-0' : 'section home-back mx-0 px-0' : logged ? 'section mx-0 px-0' : 'section home-back mx-0 px-0' ">
     <nav v-if="!logged" class="navbar home-navbar">
       <div class="navbar-brand">
         <a class="navbar-item nav-heading">
@@ -21,11 +21,81 @@
       </div>
     </nav>
     <div :class=" ismobile ? 'columns is-mobile is-centered mx-0 px-0' : 'columns is-mobile is-centered mx-0 px-0 '">
-      <div class="column is-full">
+      <div class="column is-full mx-0 px-0">
         <div class="loading">
           <loading :active.sync="loading" :can-cancel="false" :is-full-page="fullpage"></loading>
         </div>
-        <div v-if="logged" class="tags-has-addons mt-3">
+         <div v-show="logged && netflix" class="columns is-desktop is-multiline is-centered is-vcentered mx-0 px-0">
+           <div v-for="(hero, index) in mainhero" v-bind:key="index" class="column is-full mx-0 px-0 mt-0 pt-0">
+             <section class="hero is-fullheight mx-0 px-0" :style="'background-image: url('+hero.poster+');background-size:cover;min-width:100%;box-shadow:inset 0 0 0 2000px rgba(0, 0, 0, 0.2);'">
+              <div class="hero-body">
+                <div class="container">
+                  <h2 class="subtitle has-text-white">
+                    {{ hero.subtitle }}
+                  </h2>
+                  <h1 class="title main-home-hero-title has-text-white is-1">
+                    {{ hero.name }}
+                  </h1>
+                  <h3 class="subtitle has-text-white">
+                    Watch Here
+                  </h3>
+                  <button class="button is-dark" @click="gotoPage('/'+hero.link+'/')">
+                    <span class="icon">
+                      <i class="fas fa-play"></i>
+                    </span>
+                    <span>Play Now</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+           </div>
+           <div :class=" ismobile ? 'column is-full mt-2 mr-0'  : 'column is-full ml-2 mr-0 pl-4 pr-0'">
+             <div class="columns is-mobile">
+               <div class="column is-half">
+                 <h2 class="subtitle has-text-netflix-only has-text-weight-bold">
+                   Top Trending
+                 </h2>
+               </div>
+               <div class="column pr-4 mr-4 is-half has-text-centered">
+                 <span class="icon has-text-weight-bold has-text-netflix" style="cursor: pointer;font-size:18px;">
+                   <i class="fas fa-arrow-alt-circle-left" @click="swipeLeft('trend')"></i>
+                 </span>
+                 <span class="icon has-text-weight-bold has-text-netflix" style="cursor: pointer;font-size:18px;">
+                   <i class="fas fa-arrow-alt-circle-right" @click="swipeRight('trend')"></i>
+                 </span>
+               </div>
+             </div>
+             <div class="trending-block" ref="trend">
+               <div v-for="(trend, index) in trending" v-bind:key="index" class="trend-link" @click="gotoPage('/'+trend.link+'/')" :style="'background: url('+trend.poster+');background-size:cover;cursor: pointer;'">
+               </div>
+             </div>
+           </div>
+           <div :class=" ismobile ? 'column is-full mt-2 mr-0'  : 'column is-full ml-2 mr-0 pl-4 pr-0'">
+             <div class="columns is-mobile">
+               <div class="column is-half">
+                 <h2 class="subtitle has-text-netflix-only has-text-weight-bold">
+                   Categories
+                 </h2>
+               </div>
+               <div class="column pr-4 mr-4 is-half has-text-centered">
+                 <span class="icon has-text-weight-bold has-text-netflix" style="cursor: pointer;font-size:18px;">
+                   <i class="fas fa-arrow-alt-circle-left" @click="swipeLeft('cat')"></i>
+                 </span>
+                 <span class="icon has-text-weight-bold has-text-netflix" style="cursor: pointer;font-size:18px;">
+                   <i class="fas fa-arrow-alt-circle-right" @click="swipeRight('cat')"></i>
+                 </span>
+               </div>
+             </div>
+             <div class="category-block" ref="cat">
+               <div v-for="(cat, index) in category" v-bind:key="index" @click="gotoPage('/'+cat.link+'/')" class="cat-link" :style="'background: url('+cat.poster+');background-size:cover;cursor: pointer;'">
+                 <h1 class="title is-4 has-text-centered has-text-white has-text-weight-bold" style="display: flex;align-items: baseline;">
+                   {{ cat.name }}
+                 </h1>
+               </div>
+             </div>
+           </div>
+         </div>
+         <div v-if="logged && !netflix" class="tags-has-addons mt-3">
            <div class="container has-text-white is-fluid">
              <h1 class="title has-text-white has-text-centered">Hey There, Whaat up? <p class="has-text-info is-italic has-text-weight-bold is-family-monospace">{{ user.name }}</p></h1>
             <div class="tile is-ancestor has-text-centered">
@@ -99,7 +169,7 @@
             </div>
           </div>
         </div>
-        <section v-else :class="ismobile ? 'hero is-fullheight px-0' : 'hero is-fullheight'">
+        <section v-show="!logged" :class="ismobile ? 'hero is-fullheight px-0' : 'hero is-fullheight'">
           <div class="hero-body">
             <div :class="ismobile ? 'container has-text-white is-fluid px-0'  : 'container has-text-white is-fluid'">
               <h1 :class="ismobile ? 'title has-text-white has-text-centered' : 'title is-1 has-text-white has-text-centered'">
@@ -166,8 +236,13 @@ import 'vue-loading-overlay/dist/vue-loading.css';
                 user: {},
                 token: {},
                 gds: [],
+                netflix: true,
+                mainhero: {},
+                trending: [],
+                category: [],
                 currgd: {},
                 email: "",
+                heroCss:"",
                 disabled: true,
                 truncatedApi: "",
                 logged: false,
@@ -201,6 +276,17 @@ import 'vue-loading-overlay/dist/vue-loading.css';
               this.logged = false
               this.loading = false;
             }
+          },
+          shuffle(array) {
+            var currentIndex = array.length, temporaryValue, randomIndex;
+            while (0 !== currentIndex) {
+              randomIndex = Math.floor(Math.random() * currentIndex);
+              currentIndex -= 1;
+              temporaryValue = array[currentIndex];
+              array[currentIndex] = array[randomIndex];
+              array[randomIndex] = temporaryValue;
+            }
+            return array
           },
           verifyEmail(e) {
             this.loading = true;
@@ -241,6 +327,36 @@ import 'vue-loading-overlay/dist/vue-loading.css';
               })
             }
           },
+          scrollTo(element, scrollPixels, duration) {
+            const scrollPos = element.scrollLeft;
+            if ( !( (scrollPos === 0 || scrollPixels > 0) && (element.clientWidth + scrollPos === element.scrollWidth || scrollPixels < 0)))
+            {
+              const startTime =
+                "now" in window.performance
+                  ? performance.now()
+                  : new Date().getTime();
+
+              function scroll(timestamp) {
+                const timeElapsed = timestamp - startTime;
+                const progress = Math.min(timeElapsed / duration, 1);
+                element.scrollLeft = scrollPos + scrollPixels * progress;
+                if (timeElapsed < duration) {
+                  window.requestAnimationFrame(scroll);
+                } else {
+                  return;
+                }
+              }
+              window.requestAnimationFrame(scroll);
+            }
+          },
+          swipeLeft(func) {
+            const content = "this.$refs."+func;
+            this.scrollTo(eval(content), -300, 400);
+          },
+          swipeRight(func) {
+            const content = "this.$refs."+func;
+            this.scrollTo(eval(content), 300, 400);
+          },
           validateData(){
             const emailRegex = /[a-z1-9].+@+[a-z1-9A-Z].+[.][a-z]+/g
             if(emailRegex.test(this.email)){
@@ -248,13 +364,27 @@ import 'vue-loading-overlay/dist/vue-loading.css';
             } else {
               this.disabled = true;
             }
+          },
+          filterArrSlice(array){
+            return this.shuffle(array.filter((arr) => {
+              return arr.root == this.currgd.id
+            })[0].link).slice(0,1)
+          },
+          filterArr(array) {
+            return this.shuffle(array.filter((arr) => {
+              return arr.root == this.currgd.id
+            })[0].link)
           }
         },
         beforeMount() {
+          this.netflix = window.themeOptions.netflix_home;
+          this.mainhero = this.filterArrSlice(window.mainHeroLinks);
+          this.trending = this.filterArr(window.trendingPosterLinks);
+          this.category = this.filterArr(window.homeCategories);
+          this.quickLinks = this.filterArr(window.quickLinks);
           this.assignUserInfo();
         },
         mounted() {
-          this.quickLinks = window.quickLinks;
           if(this.user.admin && this.user.superadmin){
             this.admin = true,this.superadmin = true, this.loading = false;
           } else if(this.user.admin && !this.user.superadmin){
@@ -293,7 +423,7 @@ import 'vue-loading-overlay/dist/vue-loading.css';
             } else {
               return true
             }
-          }
+          },
         },
         watch: {
           email: "validateData"
